@@ -1,14 +1,13 @@
 {% extends "layout/basic.html" %} 
+{% block title %}{{ current_rubric.name }}{% endblock %} 
 {% block content %} 
+<h2>Рубрика: {{ current_rubric.name }}</h2> 
 {% for bb in bbs %} 
 <div class="bb-card">
     <h2>{{ bb.title }}</h2>
     <p>{{ bb.content }}</p>
 
     <p>Цена: <strong>{{ bb.price|floatformat:2 }}</strong> руб.</p>
-
-    <p><a href="{% url 'rubric_bbs' bb.rubric.pk %}">
-        Рубрика: {{ bb.rubric.name }}</a></p>
 
     <p>Теги:
         {% for tag in bb.tags.all %}
@@ -35,6 +34,6 @@
     {% endif %}
 
     <p>{{ bb.published|date:"d.m.Y H:i:s" }}</p>
-</div> 
-{% endfor %} 
+</div>
+{% endfor %}
 {% endblock %}
