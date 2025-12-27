@@ -1,56 +1,57 @@
 from django.contrib import admin
-
-# Импортируем все модели, включая новые, добавленные для связей
 from .models import (
     Bb,
     Rubric,
     BbDetail,
     Tag,
     ProjectUser,
-    BbRating
+    BbRating,
+    BbFeature,  # Добавляем новую модель характеристик
+    # BbImage   # Раскомментируйте, если создавали модель для фото
 )
 
-# ----------------------------------------------------
-# Настройка для модели Rubric
-# (Оставлена простой, так как у вас не было кастомной)
-# ----------------------------------------------------
-admin.site.register(Rubric)
+
+# 1. Настройка Inline для характеристик
+# Это позволит добавлять/редактировать параметры прямо внутри объявления
+class BbFeatureInline(admin.TabularInline):
+    model = BbFeature
+    extra = 1  # Количество пустых полей для новых параметров
 
 
-# ----------------------------------------------------
-# Настройка для модели Bb (Объявления)
-# (Ваша оригинальная настройка)
-# ----------------------------------------------------
+# 2. Настройка Inline для фото (опционально)
+# class BbImageInline(admin.TabularInline):
+#     model = BbImage
+#     extra = 1
+
+# 3. Настройка основной модели Bb (Объявления)
 class BbAdmin(admin.ModelAdmin):
+    # Что отображать в общем списке
     list_display = ('rubric', 'title', 'content', 'price', 'published')
+    # Что будет ссылкой на редактирование
     list_display_links = ('title', 'content')
+    # По каким полям искать
     search_fields = ('title', 'content')
 
-admin.site.register(Bb, BbAdmin)
+    # ПОДКЛЮЧАЕМ ДИНАМИЧЕСКИЕ СПИСКИ (Характеристики)
+    inlines = [BbFeatureInline]  # Добавьте сюда BbImageInline, если нужно
 
 
-# ----------------------------------------------------
-# Настройка для модели BbRating (Для связи Многие-ко-Многим с доп. данными)
-# Добавляем list_display для удобного просмотра
-# ----------------------------------------------------
+# 4. Настройка для модели BbRating
 class BbRatingAdmin(admin.ModelAdmin):
     list_display = ('bb', 'user', 'rating_value', 'rated_at')
     list_filter = ('rating_value', 'rated_at')
     search_fields = ('bb__title', 'user__username')
 
 
-# ----------------------------------------------------
-# Регистрация НОВЫХ моделей
-# ----------------------------------------------------
+# РЕГИСТРАЦИЯ ВСЕХ МОДЕЛЕЙ
 
-# Модель для связи «Один-к-Одному»
+admin.site.register(Rubric)
+admin.site.register(Bb, BbAdmin)  # Используем расширенную настройку с Inline
 admin.site.register(BbDetail)
-
-# Модель для простой связи «Многие-ко-Многим»
 admin.site.register(Tag)
-
-# Модель Пользователя для сложной связи «Многие-ко-Многим»
 admin.site.register(ProjectUser)
-
-# Промежуточная модель для сложной связи «Многие-ко-Многим»
 admin.site.register(BbRating, BbRatingAdmin)
+
+# Регистрируем характеристики отдельно (на случай, если захотите смотреть их общим списком)
+admin.site.register(BbFeature)
+# admin.site.register(BbImage)

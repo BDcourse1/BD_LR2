@@ -149,3 +149,23 @@ class BbRating(models.Model):
         verbose_name_plural = 'Оценки объявлений'
         verbose_name = 'Оценка объявления'
         unique_together = ('bb', 'user')
+
+
+
+class BbImage(models.Model):
+    bb = models.ForeignKey(Bb, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='bbs/images/', verbose_name='Изображение')
+    description = models.CharField(max_length=100, blank=True, verbose_name='Описание фото')
+
+class BbFeature(models.Model):
+    bb = models.ForeignKey(Bb, on_delete=models.CASCADE, related_name='features', verbose_name='Объявление')
+    name = models.CharField(max_length=50, verbose_name='Параметр')
+    value = models.CharField(max_length=100, verbose_name='Значение')
+
+    # ДОБАВЬТЕ ЭТОТ МЕТОД:
+    def __str__(self):
+        return f"{self.name}: {self.value}"
+
+    class Meta:
+        verbose_name = 'Характеристика'
+        verbose_name_plural = 'Характеристики'

@@ -1,48 +1,3 @@
-# from django.shortcuts import render
-# from .models import Bb
-# from .models import Rubric
-# from django.views.generic.edit import CreateView
-# from .forms import BbForm
-# from django.urls import reverse_lazy
-#
-# class BbCreateView(CreateView):
-#     template_name = 'bboard/bb_create.html'
-#     form_class = BbForm
-#     success_url = '/bboard/'
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         success_url = reverse_lazy('index')
-#         context['rubrics'] = Rubric.objects.all()
-#         return context
-#
-# def index(request):
-#     bbs = Bb.objects.all()
-#     rubrics = Rubric.objects.all()
-#     context = {'bbs': bbs, 'rubrics': rubrics}
-#     return render(request, 'bboard/index.html', context)
-#
-#
-# def rubric_bbs(request, rubric_id):
-#     bbs = Bb.objects.filter(rubric=rubric_id)
-#     rubrics = Rubric.objects.all()
-#     current_rubric = Rubric.objects.get(pk=rubric_id)
-#     context = {'bbs': bbs, 'rubrics': rubrics, 'current_rubric': current_rubric}
-#     return render(request, 'bboard/by_rubric.html', context)
-#
-# def by_rubric(request, rubric_id):
-#     bbs = Bb.objects.filter(rubric=rubric_id)
-#     rubrics = Rubric.objects.all()
-#     current_rubric = Rubric.objects.get(pk=rubric_id)
-#     context = {
-#         'bbs': bbs,
-#         'rubrics': rubrics,
-#         'current_rubric': current_rubric
-#     }
-#     return render(request, 'bboard/by_rubric.html', context)
-
-# bboard/views.py
-
 from django.shortcuts import render
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
@@ -52,6 +7,12 @@ from .models import Bb, Rubric, Tag, BbRating, ProjectUser
 from django.db.models import Avg, Count
 # Импорт формы
 from .forms import BbForm
+
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from .models import Bb
+from .forms import BbForm, FeatureFormSet  # Импортируем наш формсет
 
 
 # ----------------------------------------------------------------------
@@ -65,10 +26,34 @@ class BbCreateView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Этот код, вероятно, лишний, так как рубрики должны быть в форме
-        # Если рубрики нужны в контексте, оставьте:
-        context['rubrics'] = Rubric.objects.all()
+        if self.request.POST:
+            # Если страница отправлена (POST), заполняем формсет данными из запроса
+            context['features'] = FeatureFormSet(self.request.POST)
+        else:
+            # Если страница только открылась (GET), создаем пустой формсет
+            context['features'] = FeatureFormSet()
         return context
+
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        features = context['features']
+
+        # Проверяем на валидность и основную форму, и все формы в наборе
+        if form.is_valid() and features.is_valid():
+            # 1. Сохраняем товар, но пока только в памяти (commit=False не нужен, если сразу сохраняем)
+            self.object = form.save()
+
+            # 2. Связываем характеристики с только что созданным товаром
+            features.instance = self.object
+
+            # 3. Сохраняем все характеристики в базу данных
+            features.save()
+
+            return redirect(self.get_success_url())
+        else:
+            # Если что-то не так, заново отрисовываем страницу с ошибками
+            return self.render_to_response(self.get_context_data(form=form))
 
 
 # ----------------------------------------------------------------------

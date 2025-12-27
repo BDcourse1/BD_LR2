@@ -1,10 +1,64 @@
-{% extends "layout/basic.html" %} 
-{% block title %}Добавление объявления{% endblock %} 
-{% block content %} 
-<h2>Добавление объявления</h2> 
-    <form method="post">
+{% extends "layout/basic.html" %}
+
+{% block content %}
+<h2>Добавление товара с характеристиками</h2>
+
+<form method="post" id="product-form">
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit" value="Добавить">
-</form> 
+
+    <hr>
+    <h3>Характеристики</h3>
+    {{ features.management_form }}
+
+    <div id="features-list">
+        {% for f_form in features %}
+            <div class="feature-item" style="border: 1px solid #eee; padding: 10px; margin-bottom: 5px; position: relative;">
+                {{ f_form.as_p }}
+                <button type="button" class="remove-btn" style="color: red; cursor: pointer;">[Удалить]</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div id="empty-form" style="display: none;">
+        <div class="feature-item" style="border: 1px solid #eee; padding: 10px; margin-bottom: 5px; position: relative;">
+            {{ features.empty_form.as_p }}
+            <button type="button" class="remove-btn" style="color: red; cursor: pointer;">[Удалить]</button>
+        </div>
+    </div>
+
+    <button type="button" id="add-feature">＋ Добавить параметр</button>
+    <br><br>
+    <input type="submit" value="Сохранить всё">
+</form>
+
+<script>
+    const addBtn = document.getElementById('add-feature');
+    const totalForms = document.getElementById('id_features-TOTAL_FORMS');
+    const featuresList = document.getElementById('features-list');
+    const emptyFormHtml = document.getElementById('empty-form').innerHTML;
+
+    addBtn.addEventListener('click', function() {
+        const currentCount = parseInt(totalForms.value);
+        const newFormHtml = emptyFormHtml.replace(/__prefix__/g, currentCount);
+        const newFormDiv = document.createElement('div');
+        newFormDiv.innerHTML = newFormHtml;
+        featuresList.appendChild(newFormDiv);
+        totalForms.value = currentCount + 1;
+    });
+
+    featuresList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+            const item = e.target.closest('.feature-item');
+            const deleteCheckbox = item.querySelector('input[name$="-DELETE"]');
+
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                item.style.display = 'none';
+            } else {
+                item.remove();
+            }
+        }
+    });
+</script>
 {% endblock %}
