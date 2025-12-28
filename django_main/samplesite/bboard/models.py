@@ -1,6 +1,7 @@
 from django.db import models
 # Импорт для работы с ошибками валидации
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # ----------------------------------------------------------------------
@@ -27,6 +28,8 @@ def validate_positive_price(value):
 class Rubric(models.Model):
     name = models.CharField(max_length=20, db_index=True,
                             verbose_name='Название')
+
+    description = models.TextField(null=True, blank=True, verbose_name='Описание рубрики')
 
     def __str__(self):
         return self.name
@@ -114,6 +117,8 @@ class BbDetail(models.Model):
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name='Тег')
 
+    color = models.CharField(max_length=7, default='#ffffff', verbose_name='Цвет тега')
+
     def __str__(self):
         return self.name
 
@@ -124,6 +129,8 @@ class Tag(models.Model):
 
 class ProjectUser(models.Model):
     username = models.CharField(max_length=50, unique=True, verbose_name='Имя пользователя')
+
+    registration_date = models.DateField(auto_now_add=True, null=True, verbose_name='Дата регистрации')
 
     # 📌 ИСПРАВЛЕНИЕ АДМИН-ПАНЕЛИ
     def __str__(self):
@@ -138,10 +145,16 @@ class BbRating(models.Model):
     bb = models.ForeignKey(Bb, on_delete=models.CASCADE, verbose_name='Объявление')
     user = models.ForeignKey(ProjectUser, on_delete=models.CASCADE, verbose_name='Пользователь')
 
-    rating_value = models.IntegerField(verbose_name='Оценка (1-5)')
+    # Добавляем валидаторы: минимум 1, максимум 5
+    rating_value = models.IntegerField(
+        verbose_name='Оценка (1-5)',
+        validators=[
+            MinValueValidator(1, message="Оценка не может быть меньше 1"),
+            MaxValueValidator(5, message="Оценка не может быть больше 5")
+        ]
+    )
     rated_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата оценки')
 
-    # 📌 ИСПРАВЛЕНИЕ АДМИН-ПАНЕЛИ
     def __str__(self):
         return f"Оценка {self.rating_value}/5 для '{self.bb.title}' от {self.user.username}"
 

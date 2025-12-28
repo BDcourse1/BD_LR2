@@ -49,7 +49,18 @@ admin.site.register(Rubric)
 admin.site.register(Bb, BbAdmin)  # Используем расширенную настройку с Inline
 admin.site.register(BbDetail)
 admin.site.register(Tag)
-admin.site.register(ProjectUser)
+
+
+class ProjectUserAdmin(admin.ModelAdmin):
+    # Колонки, которые будут видны в общем списке пользователей
+    list_display = ('username', 'registration_date')
+
+    # Поле даты регистрации создается автоматически (auto_now_add),
+    # поэтому его нужно пометить как "только для чтения", чтобы увидеть в карточке
+    readonly_fields = ('registration_date',)
+
+admin.site.register(ProjectUser, ProjectUserAdmin)
+
 admin.site.register(BbRating, BbRatingAdmin)
 
 # Регистрируем характеристики отдельно (на случай, если захотите смотреть их общим списком)
